@@ -53,6 +53,25 @@ Vector.prototype = {
     }
   },
 
+  remove: function(dim) {
+    if (this.dim >= dim) {
+      for (var i = dim, len = this.dim - 1; i < len; ++i) {
+        this[i] = this[i + 1];
+      }
+
+      delete this[--this.dim];
+      this.length--;
+
+      if (this.type == Vector.ROW) {
+        this.cols--;
+      } else {
+        this.rows--;
+      }
+    }
+
+    return this;
+  },
+
   flat: function() {
     var elements = [];
     for (var i = 0, dim = this.dim; i < dim; ++i) {

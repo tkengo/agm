@@ -1,12 +1,12 @@
 var data = Matrix.create(_data);
-var data = Matrix.create(createData(800, 5));
+// var data = Matrix.create(createData(800, 5));
 var p;
 var sigma;
 var m;
 var gamma;
 
 var LAMBDA = 0.55;
-var TAU = 0.22;
+var TAU = 0.23;
 var N = data.rows;
 var K = data.rows;
 var D = data.cols;
@@ -137,7 +137,8 @@ function runIteration() {
     for (var k = 0; k < K; k++) {
       var sigma_j = sigma.clone().pow(2).add(sigma[k] * sigma[k]).sqrt();
       var c = sigma_j.clone().pow(-D).mul(p[k]);
-      var expc = dist_k.col(k).pow(2).div(sigma_j.pow(2).mul(2));
+      var expc = dist_k.col(k).pow(2).div(sigma_j.clone().pow(2).mul(2));
+      expc.mul(-1);
       gamma_k.setCol(k, c.mul(expc.exp()));
     }
 
@@ -153,45 +154,49 @@ function runIteration() {
       }
     }
 
-    var keeps = [];
-    // var ik = 1;
-    // while (ik <= K) {
-    //   var id = p.sortWithIndex('desc')[1];
-    //   var k = id[ik];
+    // var keeps = [];
+    var ik = 0;
+    while (ik < K) {
+      var id = p.clone().sortWithIndex('desc')[1];
+      var k = id[ik];
+      var sum = 0;
+      for (var i = 0; i < ik; i++) {
+        sum += gamma_k[k][id[i]];
+      }
+      if (gamma_k[k][k] / sum < TAU) {
+        p.remove(k);
+        sigma.remove(k);
+        m.removeRow(k);
+        gamma_k.removeRow(k);
+        gamma_k.removeCol(k);
+        K--;
+      } else {
+        ik++;
+      }
+    }
+    // var id = p.sortWithIndex('desc')[1];
+    // for (var i = 0; i < id.length; i++) {
+    //   var k = id[i];
     //   var sum = 0;
-    //   for (var i = 0; i < ik; i++) {
-    //     sum += gamma_k[k][id[i]];
+    //   for (var j = 0; j < keeps.length; j++) {
+    //     sum += gamma_k[k][keeps[j]];
     //   }
-    //   if (gamma_k[k][k] / sum < TAU) {
-    //     K--;
-    //   } else {
+    //
+    //   var rho = gamma_k[k][k] / (gamma_k[k][k] + sum);
+    //   if (rho >= TAU) {
     //     keeps.push(k);
-    //     ik++;
     //   }
     // }
-    var id = p.sortWithIndex('desc')[1];
-    for (var k = 0; k < id.length; k++) {
-      var i = id[k];
-      var sum = 0;
-      for (var j = 0; j < keeps.length; j++) {
-        sum += gamma_k[i][keeps[j]];
-      }
-
-      var rho = gamma_k[i][i] / (gamma_k[i][i] + sum);
-      if (rho >= TAU) {
-        keeps.push(i);
-      }
-    }
-    var new_p = [], new_m = [], new_sigma = [];
-    for (var i = 0; i < keeps.length; i++) {
-      new_p[i]     = p[keeps[i]];
-      new_m[i]     = m[keeps[i]];
-      new_sigma[i] = sigma[keeps[i]];
-    }
-    p     = Vector.create(new_p).t();
-    m     = Matrix.create(new_m);
-    sigma = Vector.create(new_sigma).t();
-    K     = keeps.length;
+    // var new_p = [], new_m = [], new_sigma = [];
+    // for (var i = 0; i < keeps.length; i++) {
+    //   new_p[i]     = p[keeps[i]];
+    //   new_m[i]     = m[keeps[i]];
+    //   new_sigma[i] = sigma[keeps[i]];
+    // }
+    // p     = Vector.create(new_p).t();
+    // m     = Matrix.create(new_m);
+    // sigma = Vector.create(new_sigma).t();
+    // K     = keeps.length;
   }
 }
 

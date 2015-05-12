@@ -117,6 +117,30 @@ Matrix.prototype = {
     return this;
   },
 
+  removeCol: function(col) {
+    if (this.cols >= col) {
+      for (var r = 0, rlen = this.rows; r < rlen; ++r) {
+        this[r].splice(col, 1);
+      }
+
+      this.cols--;
+    }
+
+    return this;
+  },
+
+  removeRow: function(row) {
+    if (this.rows >= row) {
+      for (var r = row, len = this.rows - 1; r < len; ++r) {
+        this[r] = this[r + 1];
+      }
+
+      delete this[--this.rows];
+    }
+
+    return this;
+  },
+
   at: function(row, col) {
     if (typeof col == 'undefined') {
       col = row % this.cols;
