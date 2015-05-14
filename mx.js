@@ -1,23 +1,6 @@
 var Mx = {};
 Mx.Math  = {};
 
-Mx.Math.methods = [
-  'abs',
-  'acos',
-  'asin',
-  'atan',
-  'atan2',
-  'ceil',
-  'cos',
-  'exp',
-  'floor',
-  'log',
-  'round',
-  'sin',
-  'sqrt',
-  'tan'
-];
-
 var asMath = (function() {
   function abs()   { return this.map(function(v) { return Math.abs(v);   }); };
   function acos()  { return this.map(function(v) { return Math.acos(v);  }); };

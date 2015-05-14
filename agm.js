@@ -1,24 +1,31 @@
-var data = Matrix.create(_data);
-// var data = Matrix.create(createData(800, 5));
+var data;
 var p;
 var sigma;
 var m;
 var gamma;
+var N;
+var K;
+var D;
 
-var LAMBDA = 0.55;
-var TAU = 0.23;
-var N = data.rows;
-var K = data.rows;
-var D = data.cols;
+var LAMBDA = 0.23;
+var TAU = 0.55;
 var maxIt = 1;
+var it = 0;
 
 window.onload = function() {
-  draw();
   initialize();
+  draw(true);
+
+  document.getElementById('next').addEventListener('click', function() {
+    runIteration();
+  });
+  document.getElementById('reset').addEventListener('click', function() {
+    initialize();
+    draw(true);
+  });
 };
 
 function createData(dataNum, componentCount) {
-  var count = dataNum / componentCount;
   var data = [];
   var r = [], cx = [], cy = [];
 
@@ -26,7 +33,7 @@ function createData(dataNum, componentCount) {
     var r  = 0.1 * Math.random();
     var cx = Math.random();
     var cy = Math.random();
-    for (var n = 0; n < count; n++) {
+    for (var n = 0; n < dataNum; n++) {
       data.push([ cx + r * Mx.Utils.randn(), cy + r * Mx.Utils.randn() ]);
     }
   }
@@ -35,16 +42,24 @@ function createData(dataNum, componentCount) {
 }
 
 function initialize() {
+  var dataNum = document.getElementById('data_num').value;
+  var componentNum = document.getElementById('component_num').value;
+  data = Matrix.create(createData(dataNum, componentNum));
+
+  N = data.rows;
+  K = data.rows;
+  D = data.cols;
+
   p     = Vector.create(data.rows, 1.0 / data.rows).t();
   sigma = Vector.create(data.rows, 0.02).t();
   m     = data.clone();
 
-  document.getElementById('next').addEventListener('click', function() {
-    runIteration();
-  });
+  it = 0;
+  document.getElementById('K').innerText = '?';
+  document.getElementById('it').innerText = it;
 }
 
-function draw() {
+function draw(ignoreDrawingComponent) {
   var board = JXG.JSXGraph.initBoard('box', {
     axis: true,
     boundingbox: [ 0, 1.1, 1.1, 0 ],
@@ -54,7 +69,7 @@ function draw() {
     board.create('point', data[r], { size: 0.5, withLabel: false });
   }
 
-  if (m && sigma) {
+  if (!ignoreDrawingComponent) {
     var p1 = [];
     var p2 = [];
     for (var r = 0; r < m.rows; r++) {
@@ -65,12 +80,14 @@ function draw() {
       board.create('circle', [ p1[r], p2[r] ]);
     }
 
-    document.getElementById('N').innerText = '現在のK = ' + K;
+    document.getElementById('K').innerText = K;
+    document.getElementById('it').innerText = it;
   }
 }
 
 function runIteration() {
   for (var loop = 0; loop < maxIt; loop++) {
+    it++;
     gamma = Matrix.zeros(N, K);
     var dist = distance(data, m);
 
@@ -154,49 +171,49 @@ function runIteration() {
       }
     }
 
-    // var keeps = [];
-    var ik = 0;
-    while (ik < K) {
-      var id = p.clone().sortWithIndex('desc')[1];
-      var k = id[ik];
+    // var ik = 0;
+    // while (ik < K) {
+    //   var id = p.clone().sortWithIndex('desc')[1];
+    //   var k = id[ik];
+    //   var sum = 0;
+    //   for (var i = 0; i < ik + 1; i++) {
+    //     sum += gamma_k[k][id[i]];
+    //   }
+    //   if (gamma_k[k][k] / sum < TAU) {
+    //     p.remove(k);
+    //     sigma.remove(k);
+    //     m.removeRow(k);
+    //     gamma_k.removeRow(k);
+    //     gamma_k.removeCol(k);
+    //     K--;
+    //   } else {
+    //     ik++;
+    //   }
+    // }
+    var keeps = [];
+    var id = p.sortWithIndex('desc')[1];
+    for (var i = 0; i < id.length; i++) {
+      var k = id[i];
       var sum = 0;
-      for (var i = 0; i < ik; i++) {
-        sum += gamma_k[k][id[i]];
+      for (var j = 0; j < keeps.length; j++) {
+        sum += gamma_k[k][keeps[j]];
       }
-      if (gamma_k[k][k] / sum < TAU) {
-        p.remove(k);
-        sigma.remove(k);
-        m.removeRow(k);
-        gamma_k.removeRow(k);
-        gamma_k.removeCol(k);
-        K--;
-      } else {
-        ik++;
+
+      var rho = gamma_k[k][k] / (gamma_k[k][k] + sum);
+      if (rho >= TAU) {
+        keeps.push(k);
       }
     }
-    // var id = p.sortWithIndex('desc')[1];
-    // for (var i = 0; i < id.length; i++) {
-    //   var k = id[i];
-    //   var sum = 0;
-    //   for (var j = 0; j < keeps.length; j++) {
-    //     sum += gamma_k[k][keeps[j]];
-    //   }
-    //
-    //   var rho = gamma_k[k][k] / (gamma_k[k][k] + sum);
-    //   if (rho >= TAU) {
-    //     keeps.push(k);
-    //   }
-    // }
-    // var new_p = [], new_m = [], new_sigma = [];
-    // for (var i = 0; i < keeps.length; i++) {
-    //   new_p[i]     = p[keeps[i]];
-    //   new_m[i]     = m[keeps[i]];
-    //   new_sigma[i] = sigma[keeps[i]];
-    // }
-    // p     = Vector.create(new_p).t();
-    // m     = Matrix.create(new_m);
-    // sigma = Vector.create(new_sigma).t();
-    // K     = keeps.length;
+    var new_p = [], new_m = [], new_sigma = [];
+    for (var i = 0; i < keeps.length; i++) {
+      new_p[i]     = p[keeps[i]];
+      new_m[i]     = m[keeps[i]];
+      new_sigma[i] = sigma[keeps[i]];
+    }
+    p     = Vector.create(new_p).t();
+    m     = Matrix.create(new_m);
+    sigma = Vector.create(new_sigma).t();
+    K     = keeps.length;
   }
 }
 
