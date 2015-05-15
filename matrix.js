@@ -1,11 +1,24 @@
 /**
- * Constructor for Matrix object. Generate Matrix object from an array of JavaScript.
- * `elements` argument must be 2 dims array.
+ * Constructor for Matrix object. Generate Matrix object from an array of JavaScript. `elements`
+ * argument must be 2 dims array.
  */
 var Matrix = function(elements) {
   this.set(elements);
 };
 
+/**
+ * Create a new Matrix object. We can pass matrix size and initial value or array object directly.
+ *
+ * First, `Matrix.create(3, 3, 1)` generates a new 3x3 matrix and all elements in it will be '1'.
+ * Default value for the third argument is zero, so we can generate a Matrix that has zero value in
+ * all of elements if the third argument is ommited.
+ * If zero or negative value is passed to `rows` or `cols` arguments, this method returns empty
+ * Matrix.
+ *
+ * Second, `Matrix.create([ 1, 2, 3 ])` generates a new 1x3 matrix and its elements have 1, 2, 3
+ * values on the first row, Or we can also generate 3x2 matrix by passing 2 dims array like this
+ * `Matrix.create([ [ 1, 2 ], [ 3, 4 ], [ 5, 6 ] ])`.
+ */
 Matrix.create = function(rows, cols, initVal) {
   var elements = [];
 
@@ -34,6 +47,41 @@ Matrix.create = function(rows, cols, initVal) {
 
 Matrix.zeros = function(rows, cols) {
   return Matrix.create(rows, cols || rows, 0);
+};
+
+Matrix.onews = function(rows, cols) {
+  return Matrix.create(rows, cols || rows, 1);
+};
+
+Matrix.eye = function(rows, cols) {
+  cols = cols || rows;
+  if (rows == cols) {
+    return Matrix.diag(1, rows);
+  } else {
+    var m = Matrix.create(rows, cols, 0);
+    for (var i = 0, len = Math.min(rows, cols); i < len; ++i) {
+        m[i][i] = 1;
+    }
+    return m;
+  }
+};
+
+Matrix.diag = function(value, size) {
+  if (typeof value == 'number') {
+    var m = Matrix.zeros(size);
+    for (var i = 0; i < size; ++i) {
+      m[i][i] = value;
+    }
+    return m;
+  } else {
+    size = size || 0;
+    var len = value.length + size;
+    var m = Matrix.zeros(len);
+    for (var i = 0; i < len; ++i) {
+      m[i][i + size] = value[i];
+    }
+    return m;
+  }
 };
 
 Matrix.prototype = {
