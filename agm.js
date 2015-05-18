@@ -14,7 +14,7 @@ var it = 0;
 
 window.onload = function() {
   initialize();
-  draw(true);
+  _draw(true);
 
   document.getElementById('next').addEventListener('click', function() {
     runIteration();
@@ -33,8 +33,13 @@ function createData(dataNum, componentCount) {
     var r  = 0.1 * Math.random();
     var cx = Math.random();
     var cy = Math.random();
+    var cz = Math.random();
     for (var n = 0; n < dataNum; n++) {
-      data.push([ cx + r * Mx.Utils.randn(), cy + r * Mx.Utils.randn() ]);
+      data.push([
+        cx + r * Mx.Utils.randn(),
+        cy + r * Mx.Utils.randn(),
+        cz + r * Mx.Utils.randn()
+      ]);
     }
   }
 
@@ -59,7 +64,81 @@ function initialize() {
   document.getElementById('it').innerText = it;
 }
 
+function _draw() {
+  var mathbox = mathBox(document.getElementById('box'), {
+    // Whether to allow mouse control of the camera.
+    cameraControls: true,
+    // Override the class to use for mouse controls.
+    controlClass: ThreeBox.OrbitControls,
+    // Whether to show the mouse cursor.
+    // When set to false, the cursor auto-hides after a short delay.
+    cursor: true,
+  }).start();
+
+  mathbox.viewport({
+    type: 'cartesian',
+    range: [ [0, 1.1 ], [ 0, 1.1 ], [ 0, 1.1 ] ],
+    scale: [ 1, 1, 1 ],
+  }).axis({
+    id: 'x-axis',
+    axis: 0,
+    color: 0xa0a0a0,
+    ticks: 5,
+    lineWidth: 2,
+    size: .05,
+    labels: true,
+  })
+  .axis({
+    id: 'y-axis',
+    axis: 1,
+    color: 0xa0a0a0,
+    ticks: 5,
+    lineWidth: 2,
+    size: .05,
+    labels: true,
+    zero: false,
+  })
+  .axis({
+    id: 'z-axis',
+    axis: 2,
+    color: 0xa0a0a0,
+    ticks: 5,
+    lineWidth: 2,
+    size: .05,
+    zero: false,
+    labels: true,
+  }).grid({
+    id: 'my-grid',
+    axis: [0, 2],
+    color: 0xc0c0c0,
+    lineWidth: 1,
+  }).camera({
+    orbit: 5.5,        // Distance from the center
+    lookAt: [0, 0, 0], // Point of focus in space
+  }).curve({
+    id: 'controlPoints',
+    n: data.rows,
+    // data: controlData,
+    data: data.toArray(),
+    pointSize: 3,
+    points: true,
+    line: false,
+    color: 0xff0000,
+  }).curve({
+    n: m.rows,
+    data: m.toArray(),
+    pointSize: 5,
+    points: true,
+    line: false,
+    color: 0x0000ff,
+  });
+
+    document.getElementById('K').innerText = K;
+    document.getElementById('it').innerText = it;
+}
+
 function draw(ignoreDrawingComponent) {
+  return;
   var board = JXG.JSXGraph.initBoard('box', {
     axis: true,
     boundingbox: [ 0, 1.1, 1.1, 0 ],

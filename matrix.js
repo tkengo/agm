@@ -25,9 +25,9 @@ Matrix.create = function(rows, cols, initVal) {
   if (typeof rows == 'number') {
     if (rows > 0 && cols > 0) {
       initVal = initVal || 0;
-      for (var r = 0; r < rows; ++r) {
+      for (var r = rows - 1; r >= 0; --r) {
         var row = [];
-        for (var c = 0; c < cols; ++c) {
+        for (var c = cols - 1; c >= 0; --c) {
           row[c] = initVal;
         }
         elements[r] = row;
@@ -49,7 +49,7 @@ Matrix.zeros = function(rows, cols) {
   return Matrix.create(rows, cols || rows, 0);
 };
 
-Matrix.onews = function(rows, cols) {
+Matrix.ones = function(rows, cols) {
   return Matrix.create(rows, cols || rows, 1);
 };
 
@@ -101,11 +101,15 @@ Matrix.prototype = {
   },
 
   clone: function() {
+    return new Matrix(this.toArray());
+  },
+
+  toArray: function() {
     var elements = [];
     for (var r = 0, len = this.rows; r < len; ++r) {
       elements[r] = this[r].concat();
     }
-    return new Matrix(elements);
+    return elements;
   },
 
   map: function(f) {
@@ -162,6 +166,48 @@ Matrix.prototype = {
         this[index][c] = row[c];
       }
     }
+    return this;
+  },
+
+  insertRow: function(index, row) {
+    if (typeof row == 'number') {
+      var tmp = [];
+      for (var i = 0, len = this.cols; i < len; ++i) {
+        tmp[i] = row;
+      }
+      row = tmp;
+    } else if (row.dim) {
+      row = row.toArray();
+    }
+
+    for (var r = this.rows++; r > index; --r) {
+      this[r] = this[r - 1];
+    }
+    this[index] = row;
+    return this;
+  },
+
+  insertCol: function(index, col) {
+    if (typeof col == 'number') {
+      var tmp = [];
+      for (var i = 0, len = this.rows; i < len; ++i) {
+        tmp[i] = col;
+      }
+      col = tmp;
+    } else if (col.dim) {
+      col = col.toArray();
+    }
+
+    var c = this.cols++;
+    for (var r = 0, rlen = this.rows; r < rlen; ++r) {
+      for (; c > index; --c) {
+        this[r][c] = this[r][c - 1];
+      }
+    }
+    for (var r = 0, rlen = this.rows; r < rlen; ++r) {
+      this[r][index] = col[c];
+    }
+
     return this;
   },
 
@@ -251,12 +297,28 @@ Matrix.prototype = {
   },
 
   mul: function(v) {
-    for (var r = 0, rlen = this.rows; r < rlen; ++r) {
-      for (var c = 0, clen = this.cols; c < clen; ++c) {
-        this[r][c] *= v;
+    if (typeof v == 'number') {
+      for (var r = 0, rlen = this.rows; r < rlen; ++r) {
+        for (var c = 0, clen = this.cols; c < clen; ++c) {
+          this[r][c] *= v;
+        }
       }
+      return this;
+    } else {
+      var elements = [];
+      for (var r = 0, rlen = this.rows; r < rlen; ++r) {
+        var row = [];
+        for (var c = 0, clen = v.cols; c < clen; ++c) {
+          var sum = 0;
+          for (var i = 0, len = this.cols; i < len; ++i) {
+            sum += this[r][i] * v[i][c];
+          }
+          row[c] = sum;
+        }
+        elements[r] = row;
+      }
+      return Matrix.create(elements);
     }
-    return this;
   },
 
   div: function(v) {

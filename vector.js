@@ -28,6 +28,14 @@ Vector.prototype = {
     return new Vector(this.flat(), this.type);
   },
 
+  toArray: function() {
+    var elements = [];
+    for (var i = 0, dim = this.dim; i < dim; ++i) {
+      elements[i] = this[i];
+    }
+    return elements;
+  },
+
   map: function(f) {
     for (var i = 0, dim = this.dim; i < dim; ++i) {
       this[i] = f(this[i]);
@@ -73,11 +81,7 @@ Vector.prototype = {
   },
 
   flat: function() {
-    var elements = [];
-    for (var i = 0, dim = this.dim; i < dim; ++i) {
-      elements[i] = this[i];
-    }
-    return elements;
+    return this.toArray();
   },
 
   t: function() {
