@@ -37,8 +37,7 @@ function createData(dataNum, componentCount) {
     for (var n = 0; n < dataNum; n++) {
       data.push([
         cx + r * Mx.Utils.randn(),
-        cy + r * Mx.Utils.randn(),
-        cz + r * Mx.Utils.randn()
+        cy + r * Mx.Utils.randn()
       ]);
     }
   }
@@ -138,7 +137,6 @@ function _draw() {
 }
 
 function draw(ignoreDrawingComponent) {
-  return;
   var board = JXG.JSXGraph.initBoard('box', {
     axis: true,
     boundingbox: [ 0, 1.1, 1.1, 0 ],
